@@ -38,3 +38,5 @@ interval(1000).subscribe();
 test.getValue().subscribe(i => {
     console.log('[third]', i);
 });
+
+test.setValue(20);
