@@ -8,10 +8,10 @@ class Test {
 
     getValue(): Observable<number> {
         return of(undefined).pipe(
-            refreshFrom(this._key),
             map(() => this._value),
             map(i => i + 1),
-            map(i => i - 1)
+            map(i => i - 1),
+            refreshFrom(this._key),
         );
     }
 

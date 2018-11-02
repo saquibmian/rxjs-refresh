@@ -1,15 +1,15 @@
-import { MonoTypeOperatorFunction, Subject, BehaviorSubject, Observable, Subscription, Operator, Subscriber, TeardownLogic, observable } from "rxjs";
+import { MonoTypeOperatorFunction, Subject, BehaviorSubject, Observable } from "rxjs";
 import { tap, flatMap } from 'rxjs/operators';
 
 export function refreshFrom<T>(key: string): MonoTypeOperatorFunction<T> {
-    return obs => RefreshTokens.createForKey(key).pipe(
+    return obs => RefreshTokens.get(key).pipe(
         flatMap(() => obs)
     );
 }
 
 export function publishRefresh<T>(key: string): MonoTypeOperatorFunction<T> {
     return obs => obs.pipe(
-        tap(() => RefreshTokens.emitAllForKey(key))
+        tap(() => RefreshTokens.emit(key))
     );
 }
 
@@ -18,25 +18,26 @@ abstract class RefreshTokens {
         [key: string]: Subject<void>[];
     } = {};
 
-    static createForKey(key: string): Observable<void> {
+    static get(key: string): Observable<void> {
         if (this.tokens[key] == null) {
             this.tokens[key] = [];
         }
 
         const subject = new BehaviorSubject<void>(undefined);
         const index = this.tokens[key].push(subject);
-        let count = 0;
+        let refreshCount = 0;
 
         return subject.pipe(
-            tap(() => console.debug('refreshing', {
-                key: key,
-                subscriptionNumber: index,
-                iterationNumber: count++
-            }))
+            tap(() => {
+                console.debug(`refreshing ${key}`, {
+                    subscription: index,
+                    refreshCount: refreshCount++
+                })
+            })
         );
     }
 
-    static emitAllForKey(key: string): void {
+    static emit(key: string): void {
         const tokens = this.tokens[key];
         if (tokens == null || tokens.length == 0) {
             return;
